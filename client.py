@@ -63,7 +63,7 @@ def prase_key(CARD): #返回牌的特征码
     for j in range(0,len(CARD)-1): #???????????
         KEY.append(CARD[j]-CARD[j+1])
     return KEY
-def card_Analyse(): #仅仅要求用户输入要发的牌，返回type和value。
+def card_Analyse(): #仅仅要求用户输入要发的牌，返回type和value 刷新CURRENT。
     global Card_num
     global CURRENT
     res=['',0,0,0]#牌型，value，顺子的数量（如果有的话），牌数
@@ -79,9 +79,10 @@ def card_Analyse(): #仅仅要求用户输入要发的牌，返回type和value�
     print("请输入想打出的牌的序号，输入0表示不出:")
     SELECT=[]
     SELECT= list(map(int,input().split())) #input several numbers by XMTam
+    CURRENT=SELECT
     S_num=len(SELECT) #其实这里可以打出你实际上没有的牌 
     SELECT=sorted(SELECT)#排序
-    CURRENT=SELECT
+    
     #这里应从SELECT中搜索CARD，到底有没有这张牌。
     if S_num==1:
         if SELECT[0]==0:
@@ -210,7 +211,7 @@ def card_check(type='init',value=0):#该函数按照自己的type和value 命令
             s.sendall(str.encode(str(json)))
             break
         else: #type=='Single':
-            if res[0]=='Jump' or res[0]=='Quad' or res[0] =='DualKing' or (res[0]==type and res[1]>value):
+            if res[0]=='Jump' or res[0]=='Quad' or res[0] =='DualKing' or (res[0]==type and (res[1]>value or res[1]==0)):
                json['type']=res[0]
                json['value']=res[1]
                json['seq_num']=res[2]
@@ -224,6 +225,7 @@ def card_check(type='init',value=0):#该函数按照自己的type和value 命令
             else:
                 print('点数不够大或者牌型错误！')
                 continue
+    print('CURRENT=',CURRENT)
 
 def card_select(type='init',value=0): #要求用户回牌 #这个函数暂时废弃
     

@@ -109,9 +109,9 @@ def json_prase(js,socket=s,socket1=s,socket2=s):
         return -1
 def send_card(socket):
     ADD=[0 for i in range(3)]
-    ADD[0]=POKER[17]
-    ADD[1]=POKER[18]
-    ADD[2]=POKER[19]
+    ADD[0]=POKER[53]
+    ADD[1]=POKER[52]
+    ADD[2]=POKER[51]
     json={
     'status':200,
     'Operation':'Add',
@@ -129,8 +129,8 @@ def init_card(socket,socket1,socket2):
     
     for i in range(0,17):
         SET[i]=POKER[i] #poker的0到16号
-        SET1[i]=POKER[i+17] #poker的17到33
-        SET2[i]=POKER[i+34]#poker的34到50
+        SET1[i]=POKER[i+17] #poker的17到34
+        SET2[i]=POKER[i+34]#poker的34到51
     print('SET:')
     print(sorted(SET))
     print('SET1')
