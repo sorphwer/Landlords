@@ -90,7 +90,10 @@ def card_Analyse(): #仅仅要求用户输入要发的牌，返回type和value�
             res[3]=0
         else:
             res[0]='Single'
-            res[1]=SELECT[0]%13
+            if SELECT[0]==54 or SELECT[0]==53:
+                res[1]=SELECT[0]
+            else:
+                res[1]=SELECT[0]%13
             res[3]=1
     elif S_num==2:
         if SELECT[0]==53 and SELECT[1]==54:
@@ -191,6 +194,7 @@ def card_check(type='init',value=0):#该函数按照自己的type和value 命令
     'message':'',
     'value':0
     }
+    print('type is',type,'value is',value)
     while True:
         res=card_Analyse()
         if res[0]=='Error':
@@ -206,7 +210,7 @@ def card_check(type='init',value=0):#该函数按照自己的type和value 命令
             s.sendall(str.encode(str(json)))
             break
         else: #type=='Single':
-            if res[0]=='Jump' or res[0]=='Quad' or res[0] =='DualKing'or (res[0]==type and res[1]>value):
+            if res[0]=='Jump' or res[0]=='Quad' or res[0] =='DualKing' or (res[0]==type and res[1]>value):
                json['type']=res[0]
                json['value']=res[1]
                json['seq_num']=res[2]
@@ -341,9 +345,9 @@ def json_parse(js):
     elif recjs['Operation']=='SetTurn' :
         #开始和用户交互发牌
         #返回发牌情况给服务器
-        if recjs['Type']=='init':
+        #if recjs['Type']=='init':
           #card_select()
-          card_check()
+        card_check(recjs['type'],recjs['value'])
         
         #如果cardnum是0，返回情况给服务器
         #print(recjs)

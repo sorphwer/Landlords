@@ -6,11 +6,97 @@ c c1 c2用来建立TCP连接，建立后对三个客户端轮询。
 
 三个客户端保持循环接受json格式语句，读取相关操作要求。
 
+json的发送： dict格式（字典）转str格式（字符串）转byte格式（比特）然后发送至套接字链接的缓存中。
+
+json的读取：定期读取缓存，若不为空字节则接受缓存内容。比特转字符串转字典后直接读取。
+
+防止读取粘连：服务器发送连续的两个json之间必须等待一定时间使得远方客户端有机会清空缓存，若无，则连续两个json会出现读取错误。这种情况在本地测试中，由于各自设置了0.5-1s的等待，故不会发生。若网络中前一个json的延迟过大（大于1s），则可能出错。
+
+同时丢包的存在可能导致json残缺，理论上会报错，处理方法待开发。
+
 默认的设置是都获取本地IP地址，欲建立远程连接，请修改套接字的地址。如果需要请注意主机是否对局域网开启了DMZ映射。
 
-**未完成**：用户选牌发牌后需要检查是否存在在手牌库，若不存在则退回。若存在则扣除这些手牌。
+当前版本的示范：(发送0号牌表示不出，后续应在服务端单独识别并广播【上家选择不出】)
 
-手牌数量的控制及手牌打空游戏结束已经完成。
+![1553224407142](C:\Users\Sorphwer\AppData\Roaming\Typora\typora-user-images\1553224407142.png)
+
+连续遇到两次jump后下一家可自由发牌的相关逻辑代码：
+
+```python
+        #... 
+        if recjs['type']!='Jump':
+            if jumpCounter==1:
+                type='init'
+                value=0
+                seq_num=0
+            else:
+                jumpCounter=1
+        else:
+            jumpCounter=0
+            type=recjs['type']
+            value=recjs['value']
+            seq_num=recjs['seq_num']
+        #...
+```
+
+**待开发**：
+
+1.用户选牌发牌后需要检查是否存在在手牌库，若不存在则退回。若存在则扣除这些手牌。（因为测试需要，关闭此功能）
+
+2.在套接字相关操作时应用catch  try结构，并且返回不同的status以向程序员反馈发生了何种处理。
+
+手牌数量的控制及手牌打空手牌游戏结束已经完成，详细可见命令表。
+
+### 牌型表
+
+映射数组定义：
+
+```python
+A=['红桃','黑桃','方片','梅花']
+B=['3','4','5','6','7','8','9','10','J','Q','K','A','2']
+POKERS =[]
+n=1
+for i in A:
+    for j in B:
+        POKERS.append(((i+j+'('+str(n)+')')))  #初始化映射表
+        n+=1
+POKERS.append('小王(53)')
+POKERS.append('大王(54)')
+```
+
+实际运算使用一个1-54的数组，每个牌都对应其特定一个序号，点数为其的模13，0代表无牌。
+
+映射的代码如下：
+
+```python
+def map_card(Cno):
+    if Cno==0:
+        return None
+    else:
+        return POKERS[Cno-1]
+
+test=[1,0]
+def show_card(Card):
+    print('Now you have:',end="")
+    print(list(filter(None,(list(map(map_card,sorted(Card)))))))
+```
+
+牌的特征码（来自符老师）
+
+```python
+
+def prase_key(CARD): #返回牌的特征码
+    for i in range(len(CARD)):
+        if CARD[i]==53 or CARD[i]==54:
+            continue
+        else:
+           CARD[i]=CARD[i]%13
+    CARD=sorted(CARD)
+    KEY=[]
+    for j in range(0,len(CARD)-1):
+        KEY.append(CARD[j]-CARD[j+1])
+    return KEY
+```
 
 
 
@@ -69,3 +155,6 @@ value:该牌相对的值
 服务器收到AnsTurn之后的反应：
 1.给全部人发message内信息。
 2.把json里的三个变量刷新到服务器全局变量的： type value seq_num,然后放进set turn函数，发送。
+
+注意：card_select函数被废弃。
+改用card check

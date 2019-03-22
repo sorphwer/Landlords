@@ -15,6 +15,7 @@ FLAG2=0 #抢地主判定符
 type='init'
 value=0
 seq_num=0
+jumpCounter=0
 
 POKER=[0 for i in range(54)]
 for i in range(1,55):
@@ -50,20 +51,26 @@ def ask_select(socket,socket1,socket2):
     socket.sendall(str.encode(str(json)))
     socket1.sendall(str.encode(str(json)))
     socket2.sendall(str.encode(str(json)))
-def set_turn(socket,Type='init',value=0,seq_num=0):
+def set_turn(socket,Type,value,seq_num):
     json={
     'Status':200,
     'Operation':'SetTurn',
-    'Type':Type,
+    'type':Type,
     'value':value
     }
+    print('sent:type=',Type,' value=',value,' seq_num=',seq_num)
     socket.sendall(str.encode(str(json)))
 def json_prase(js,socket=s,socket1=s,socket2=s):
     recjs=eval(js)
+    global type
+    global value
+    global seq_num
+    global jumpCounter
+
     if recjs['Operation']=='AnsS':
         return recjs['message']
     elif recjs['Operation']=='AnsTurn':
-        #print(recjs)
+        print(recjs)
         #这里会收到回牌
         json={
        'Status':200,
@@ -73,10 +80,23 @@ def json_prase(js,socket=s,socket1=s,socket2=s):
         socket.sendall(str.encode(str(json)))
         socket1.sendall(str.encode(str(json)))
         socket2.sendall(str.encode(str(json)))
+        if recjs['type']=='Jump':
+            
+            if jumpCounter==1:
+                type='init'
+                value=0
+                seq_num=0
+                jumpCounter=0
+            else:
+                jumpCounter+=1
+        else:
+            jumpCounter=0
+            type=recjs['type']
+            value=recjs['value']
+            seq_num=recjs['seq_num']
+        print('JC=',jumpCounter)
         time.sleep(0.5)
-        type=recjs['type']
-        value=recjs['value']
-        seq_num=recjs['seq_num']
+        
     elif recjs['Operation']=='Clear':
         send_message(socket,'Game Over!')
         send_message(socket1,'Game Over!')
@@ -108,9 +128,9 @@ def init_card(socket,socket1,socket2):
     SET2=[0 for i in range(20) ]
     
     for i in range(0,17):
-        SET[i]=POKER[i]
-        SET1[i]=POKER[i+17]
-        SET2[i]=POKER[i+34]
+        SET[i]=POKER[i] #poker的0到16号
+        SET1[i]=POKER[i+17] #poker的17到33
+        SET2[i]=POKER[i+34]#poker的34到50
     print('SET:')
     print(sorted(SET))
     print('SET1')
